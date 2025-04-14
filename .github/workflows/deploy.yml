@@ -1,0 +1,36 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  docker-build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Compose services
+        run: docker-compose -f docker-compose.yml up --build -d
+
+      - name: List running containers
+        run: docker ps
+
+      - name: Run Python tests
+        run: |
+          pip install -r backend/requirements.txt
+          pytest backend/tests/
+
+      - name: Run React tests
+        run: |
+          cd frontend
+          npm ci
+          npm run test
+
+      - name: Tear down services
+        run: docker-compose down
